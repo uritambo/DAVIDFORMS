@@ -78,7 +78,6 @@ def fill(input_path, output_path, data):
         'Nombre Row1': data.get('nom', ''),
         'Número de Cuenta de ValoresRow1': data.get('gvc_account_number', ''),
         '3FECHA Y HORA DE RECEPCIÓN DE LA ORDEN DE APORTACIÓN': data.get('fecha_hora', ''),
-        'Nombre del Ordenante': data.get('nombre_ordenante', ''),
     }
 
     cifras, letras = formatar_import(data.get('recurring_amount', '0'))
