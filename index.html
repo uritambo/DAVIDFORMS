@@ -118,11 +118,25 @@
   button:disabled { opacity: 0.6; cursor: not-allowed; }
   #form-message {
     margin-top: 16px;
+  }
+  #form-message.error {
+    color: var(--error);
     font-weight: 600;
     text-align: center;
   }
-  #form-message.error { color: var(--error); }
-  #form-message.success { color: var(--success); }
+  #form-message.success {
+    color: var(--text);
+    background: #eaf4f0;
+    border: 1px solid #bfe0d2;
+    border-radius: 8px;
+    padding: 14px 16px;
+    line-height: 1.5;
+  }
+  #form-message.success strong {
+    display: block;
+    color: var(--success);
+    margin-bottom: 6px;
+  }
 </style>
 </head>
 <body>
@@ -253,7 +267,9 @@
       return;
     }
 
-    messageEl.textContent = 'Formulari enviat correctament. Gràcies!';
+    messageEl.innerHTML = '<strong>Formulari enviat correctament. Gràcies!</strong>' +
+      'En David es posarà en contacte amb vostè per WhatsApp per avisar-lo que rebrà un SMS. ' +
+      'Amb aquest SMS haurà de firmar l\'operació a la plataforma de GVC Gaesco.';
     messageEl.className = 'success';
     form.reset();
     representativeFields.classList.remove('visible');
