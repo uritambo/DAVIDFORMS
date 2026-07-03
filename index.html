@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Formulari d'alta d'inversió periòdica</title>
+<style>
+  :root {
+    --primary: #0f5c66;
+    --primary-dark: #0a3f47;
+    --bg: #f4f7f8;
+    --card-bg: #ffffff;
+    --border: #d8e1e3;
+    --text: #1c2b2e;
+    --muted: #5b6b6e;
+    --error: #c0392b;
+    --success: #1e7e34;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px 16px;
+  }
+  .card {
+    max-width: 640px;
+    margin: 0 auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  h1 {
+    font-size: 1.5rem;
+    margin: 0 0 16px;
+    color: var(--primary-dark);
+  }
+  p.description {
+    color: var(--muted);
+    line-height: 1.5;
+    margin: 0 0 24px;
+  }
+  .instructions-image {
+    width: 100%;
+    max-width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: block;
+    margin: 0 0 28px;
+  }
+  label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    font-size: 0.95rem;
+  }
+  label .required {
+    color: var(--error);
+  }
+  input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 1rem;
+    margin-bottom: 20px;
+  }
+  input[type="text"]:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(15, 92, 102, 0.15);
+  }
+  button {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+  }
+  button:hover { background: var(--primary-dark); }
+  button:disabled { opacity: 0.6; cursor: not-allowed; }
+  #form-message {
+    margin-top: 16px;
+    font-weight: 600;
+    text-align: center;
+  }
+  #form-message.error { color: var(--error); }
+  #form-message.success { color: var(--success); }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Formulari d'alta d'inversió periòdica</h1>
+  <p class="description">
+    Per realitzar inversions periòdiques, cal omplir aquest formulari. Un cop completat, després d'uns dies podrà
+    confirmar que el procés s'ha fet correctament accedint a la plataforma de GVC Gaesco, dins l'apartat
+    Perfil &gt; Documents &gt; Pendents, on hauria d'aparèixer el document corresponent.
+  </p>
+
+  <img class="instructions-image" src="assets/instruccions-compte.svg" alt="Captura de la plataforma GVC Gaesco indicant on trobar el número de compte">
+
+  <form id="investment-form">
+    <label for="gvc_account_number">Número de compte de GVC GAESCO <span class="required">*</span></label>
+    <input type="text" id="gvc_account_number" name="gvc_account_number" required autocomplete="off">
+
+    <label for="recurring_amount">Import recurrent que es vol aportar (€) <span class="required">*</span></label>
+    <input type="text" id="recurring_amount" name="recurring_amount" inputmode="decimal" required autocomplete="off">
+
+    <button type="submit" id="submit-btn">Enviar</button>
+    <p id="form-message"></p>
+  </form>
+</div>
+
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+  const SUPABASE_URL = 'https://iauqchfgbixetpftnqet.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_sJkHzGPV_8QxxXlq0oDz7w_hdMXI45_';
+
+  const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+  const form = document.getElementById('investment-form');
+  const submitBtn = document.getElementById('submit-btn');
+  const messageEl = document.getElementById('form-message');
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    messageEl.textContent = '';
+    messageEl.className = '';
+
+    const gvcAccountNumber = document.getElementById('gvc_account_number').value.trim();
+    const recurringAmount = document.getElementById('recurring_amount').value.trim();
+
+    if (!gvcAccountNumber || !recurringAmount) {
+      messageEl.textContent = 'Cal omplir tots dos camps.';
+      messageEl.className = 'error';
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Enviant...';
+
+    const { error } = await supabase
+      .from('investment_form_responses')
+      .insert({
+        gvc_account_number: gvcAccountNumber,
+        recurring_amount: recurringAmount
+      });
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Enviar';
+
+    if (error) {
+      messageEl.textContent = "Hi ha hagut un error en enviar el formulari. Torni-ho a provar.";
+      messageEl.className = 'error';
+      console.error(error);
+      return;
+    }
+
+    messageEl.textContent = 'Formulari enviat correctament. Gràcies!';
+    messageEl.className = 'success';
+    form.reset();
+  });
+</script>
+
+</body>
+</html>
