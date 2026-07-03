@@ -43,6 +43,13 @@
     line-height: 1.5;
     margin: 0 0 24px;
   }
+  h2.section-title {
+    font-size: 1.05rem;
+    color: var(--primary-dark);
+    margin: 28px 0 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
   label {
     display: block;
     font-weight: 600;
@@ -52,18 +59,49 @@
   label .required {
     color: var(--error);
   }
-  input[type="text"] {
+  input[type="text"],
+  select {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid var(--border);
     border-radius: 8px;
     font-size: 1rem;
     margin-bottom: 20px;
+    background: #fff;
+    font-family: inherit;
   }
-  input[type="text"]:focus {
+  input[type="text"]:focus,
+  select:focus {
     outline: none;
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(15, 92, 102, 0.15);
+  }
+  .checkbox-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 4px 0 20px;
+  }
+  .checkbox-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+  .checkbox-row label {
+    margin-bottom: 0;
+    font-weight: 500;
+  }
+  #representative-fields {
+    display: none;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 16px 0;
+    margin-bottom: 20px;
+  }
+  #representative-fields.visible {
+    display: block;
   }
   button {
     background: var(--primary);
@@ -98,6 +136,43 @@
   </p>
 
   <form id="investment-form">
+    <label for="nom">Nom <span class="required">*</span></label>
+    <input type="text" id="nom" name="nom" required autocomplete="off">
+
+    <label for="cognoms">Cognoms <span class="required">*</span></label>
+    <input type="text" id="cognoms" name="cognoms" required autocomplete="off">
+
+    <label for="nif">NIF <span class="required">*</span></label>
+    <input type="text" id="nif" name="nif" required autocomplete="off">
+
+    <div class="checkbox-row">
+      <input type="checkbox" id="es_menor_o_empresa" name="es_menor_o_empresa">
+      <label for="es_menor_o_empresa">El titular és menor o empresa?</label>
+    </div>
+
+    <div id="representative-fields">
+      <h2 class="section-title">Dades de l'apoderat o representant legal</h2>
+
+      <label for="representant_nom">Nom <span class="required">*</span></label>
+      <input type="text" id="representant_nom" name="representant_nom" autocomplete="off">
+
+      <label for="representant_cognoms">Cognoms <span class="required">*</span></label>
+      <input type="text" id="representant_cognoms" name="representant_cognoms" autocomplete="off">
+
+      <label for="representant_nif">NIF <span class="required">*</span></label>
+      <input type="text" id="representant_nif" name="representant_nif" autocomplete="off">
+
+      <label for="representant_qualitat">En qualitat de: <span class="required">*</span></label>
+      <select id="representant_qualitat" name="representant_qualitat">
+        <option value="">Seleccioni una opció</option>
+        <option value="Apoderat solidari">Apoderat solidari</option>
+        <option value="Apoderat mancomunat">Apoderat mancomunat</option>
+        <option value="Administrador">Administrador</option>
+        <option value="Tutor legal">Tutor legal</option>
+        <option value="Altres">Altres</option>
+      </select>
+    </div>
+
     <label for="gvc_account_number">Número de compte de GVC GAESCO <span class="required">*</span></label>
     <input type="text" id="gvc_account_number" name="gvc_account_number" required autocomplete="off">
 
@@ -120,30 +195,53 @@
   const form = document.getElementById('investment-form');
   const submitBtn = document.getElementById('submit-btn');
   const messageEl = document.getElementById('form-message');
+  const isMenorOEmpresaCheckbox = document.getElementById('es_menor_o_empresa');
+  const representativeFields = document.getElementById('representative-fields');
+  const representantNom = document.getElementById('representant_nom');
+  const representantCognoms = document.getElementById('representant_cognoms');
+  const representantNif = document.getElementById('representant_nif');
+  const representantQualitat = document.getElementById('representant_qualitat');
+
+  isMenorOEmpresaCheckbox.addEventListener('change', () => {
+    const show = isMenorOEmpresaCheckbox.checked;
+    representativeFields.classList.toggle('visible', show);
+    representantNom.required = show;
+    representantCognoms.required = show;
+    representantNif.required = show;
+    representantQualitat.required = show;
+  });
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     messageEl.textContent = '';
     messageEl.className = '';
 
-    const gvcAccountNumber = document.getElementById('gvc_account_number').value.trim();
-    const recurringAmount = document.getElementById('recurring_amount').value.trim();
-
-    if (!gvcAccountNumber || !recurringAmount) {
-      messageEl.textContent = 'Cal omplir tots dos camps.';
-      messageEl.className = 'error';
+    if (!form.checkValidity()) {
+      form.reportValidity();
       return;
     }
+
+    const esMenorOEmpresa = isMenorOEmpresaCheckbox.checked;
+
+    const payload = {
+      nom: document.getElementById('nom').value.trim(),
+      cognoms: document.getElementById('cognoms').value.trim(),
+      nif: document.getElementById('nif').value.trim(),
+      es_menor_o_empresa: esMenorOEmpresa,
+      representant_nom: esMenorOEmpresa ? representantNom.value.trim() : null,
+      representant_cognoms: esMenorOEmpresa ? representantCognoms.value.trim() : null,
+      representant_nif: esMenorOEmpresa ? representantNif.value.trim() : null,
+      representant_qualitat: esMenorOEmpresa ? representantQualitat.value : null,
+      gvc_account_number: document.getElementById('gvc_account_number').value.trim(),
+      recurring_amount: document.getElementById('recurring_amount').value.trim()
+    };
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Enviant...';
 
     const { error } = await supabase
       .from('investment_form_responses')
-      .insert({
-        gvc_account_number: gvcAccountNumber,
-        recurring_amount: recurringAmount
-      });
+      .insert(payload);
 
     submitBtn.disabled = false;
     submitBtn.textContent = 'Enviar';
@@ -158,6 +256,11 @@
     messageEl.textContent = 'Formulari enviat correctament. Gràcies!';
     messageEl.className = 'success';
     form.reset();
+    representativeFields.classList.remove('visible');
+    representantNom.required = false;
+    representantCognoms.required = false;
+    representantNif.required = false;
+    representantQualitat.required = false;
   });
 </script>
 
