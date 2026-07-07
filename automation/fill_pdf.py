@@ -89,6 +89,7 @@ def fill(input_path, output_path, data):
         values['NIFRow1_2'] = data.get('representant_nif', '')
         values['NombreRow1'] = data.get('representant_nom', '')
         values['En calidad de Apoderado solidariomancomunado Administrador Tutor legal Row1'] = data.get('representant_qualitat', '')
+        values['En calidad de Apoderado solidariomancomunado Administrador Tutor legal Resultado test de conveniencia Fondos de Inversión'] = 'NO CONVENIENTE'
 
     for widget in page.widgets():
         name = widget.field_name
